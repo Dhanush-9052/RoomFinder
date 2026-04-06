@@ -3,13 +3,42 @@ import AddClassroom from "../components/AddClassroom";
 import ClassroomList from "../components/ClassroomList";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
+import { useEffect, useRef } from "react";
 
 export default function Home() {
   const [showAdd, setShowAdd] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const profileRef = useRef(null); 
+  const addRef = useRef(null); 
   const user = auth.currentUser;
   const firstLetter = user?.email?.charAt(0).toUpperCase();
   const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+  function handleClickOutside(event) {
+
+    // 👉 Close profile popup
+    if (
+      profileRef.current &&
+      !profileRef.current.contains(event.target)
+    ) {
+      setShowProfile(false);
+    }
+
+    // 👉 Close add classroom popup
+    if (
+      addRef.current &&
+      !addRef.current.contains(event.target)
+    ) {
+      setShowAdd(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
   
   const handleLogout = async () => {
     await signOut(auth);
@@ -35,11 +64,14 @@ color: darkMode ? "white" : "black",
         <h2>Available Classrooms</h2>
 
         {/* 🔒 LOGOUT RIGHT */}
-        <div style={{ position: "relative" }}>
+        <div ref={profileRef} style={{ position: "relative" }}>
 
   {/* 🔵 ROUND ICON */}
   <div
-    onClick={() => setShowProfile(!showProfile)}
+    onClick={(e) => {
+  e.stopPropagation();
+  setShowProfile(!showProfile);
+}}
     style={{
       width: "40px",
       height: "40px",
@@ -153,7 +185,10 @@ color: darkMode ? "white" : "black",
 
       {/* ➕ FLOAT BUTTON */}
       <button
-        onClick={() => setShowAdd(!showAdd)}
+        onClick={(e) => {
+  e.stopPropagation();
+  setShowAdd(!showAdd);
+}}
         style={{
           position: "fixed",
           bottom: "25px",
@@ -173,18 +208,39 @@ color: darkMode ? "white" : "black",
 
       {/* ➕ POPUP */}
       {showAdd && (
-        <div style={{
-          position: "fixed",
-          bottom: "100px",
-          right: "25px",
-          background: "white",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
-        }}>
-          <AddClassroom onAdd={() => setShowAdd(false)} />
-        </div>
-      )}
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.5)", // 🔥 overlay
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000
+    }}
+  >
+    {/* 🧱 CENTER BOX */}
+    <div
+      ref={addRef}
+      style={{
+        background: darkMode ? "#2c2c3e" : "white",
+        color: darkMode ? "white" : "black",
+        padding: "25px",
+        borderRadius: "12px",
+        width: "350px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+      }}
+    >
+      <AddClassroom
+        darkMode={darkMode}
+        onAdd={() => setShowAdd(false)}
+      />
+    </div>
+  </div>
+)}
 
     </div>
   );
