@@ -54,7 +54,8 @@ export default function AddClassroom({ onAdd, darkMode }) {
       createdAt: Timestamp.now(),
       expiresAt: Timestamp.fromDate(expires),
       likes: 0,
-      dislikes: 0
+      dislikes: 0,
+      votedUsers: []
     });
 
     onAdd && onAdd();

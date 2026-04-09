@@ -75,49 +75,41 @@ export default function ClassroomList({ darkMode }) {
   return `${diffDays} day ago`;
 };
 
-  const handleLike = async (id) => {
+  const handleLike = async (id, roomData) => {
   const user = auth.currentUser;
   if (!user) return;
 
-  const likeKey = user.email + "_like_" + id;
-  const dislikeKey = user.email + "_dislike_" + id;
-
-  // ❌ if already reacted (like OR dislike)
-  if (localStorage.getItem(likeKey) || localStorage.getItem(dislikeKey)) {
-    alert("You have already reacted to this classroom");
+  // ❌ already voted
+  if (roomData.votedUsers?.includes(user.email)) {
+    alert("You already voted");
     return;
   }
 
   const ref = doc(db, "classrooms", id);
 
   await updateDoc(ref, {
-    likes: increment(1)
+    likes: increment(1),
+    votedUsers: [...(roomData.votedUsers || []), user.email]
   });
-
-  localStorage.setItem(likeKey, "true");
 };
 
 
-const handleDislike = async (id) => {
+const handleDislike = async (id, roomData) => {
   const user = auth.currentUser;
   if (!user) return;
 
-  const likeKey = user.email + "_like_" + id;
-  const dislikeKey = user.email + "_dislike_" + id;
-
-  // ❌ if already reacted (like OR dislike)
-  if (localStorage.getItem(likeKey) || localStorage.getItem(dislikeKey)) {
-    alert("You have already reacted to this classroom");
+  // ❌ already voted
+  if (roomData.votedUsers?.includes(user.email)) {
+    alert("You already voted");
     return;
   }
 
   const ref = doc(db, "classrooms", id);
 
   await updateDoc(ref, {
-    dislikes: increment(1)
+    dislikes: increment(1),
+    votedUsers: [...(roomData.votedUsers || []), user.email]
   });
-
-  localStorage.setItem(dislikeKey, "true");
 };
 
   return (
@@ -178,7 +170,7 @@ const handleDislike = async (id) => {
     <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
   
   <button
-    onClick={() => handleLike(r.id)}
+    onClick={() => handleLike(r.id, r)}
     style={{
       background: "#28a745",
       color: "white",
@@ -192,7 +184,7 @@ const handleDislike = async (id) => {
   </button>
 
   <button
-    onClick={() => handleDislike(r.id)}
+    onClick={() => handleDislike(r.id, r)}
     style={{
       background: "#dc3545",
       color: "white",
