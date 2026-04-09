@@ -46,7 +46,16 @@ export default function AddClassroom({ onAdd, darkMode }) {
     }
 
     // ⏳ Expiry
-    const expires = new Date(now.getTime() + 45 * 60 * 1000);
+    const expires = new Date(now);
+
+    if (now.getMinutes() < 50) {
+      // same hour → set to XX:50
+      expires.setMinutes(50, 0, 0);
+    } else {
+      // next hour → set to next XX:50
+      expires.setHours(now.getHours() + 1);
+      expires.setMinutes(50, 0, 0);
+    }
 
     await addDoc(collection(db, "classrooms"), {
       block,

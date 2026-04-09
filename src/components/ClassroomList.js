@@ -15,6 +15,7 @@ import {
 export default function ClassroomList({ darkMode }) {
   const [rooms, setRooms] = useState([]);
   const [block, setBlock] = useState("ALL");
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
   const q =
@@ -55,24 +56,43 @@ export default function ClassroomList({ darkMode }) {
 
   return () => unsubscribe();
 }, [block]);
+useEffect(() => {
+  const interval = setInterval(() => {
+    setTick(prev => prev + 1);
+  }, 1000);
 
-  // ⏱ Format time
-  const getTimeAgo = (timestamp) => {
-  if (!timestamp) return "";
+  return () => clearInterval(interval);
+}, []);
+
+  const getTimeLeft = (expiresAt) => {
+  if (!expiresAt) return "";
 
   const now = new Date();
-  const created = timestamp.toDate();
+  const expiry = expiresAt.toDate();
 
-  const diffMs = now - created;
+  const diffMs = expiry - now;
+
+  if (diffMs <= 0) return "Expired";
+
   const diffMin = Math.floor(diffMs / (1000 * 60));
-  const diffHr = Math.floor(diffMin / 60);
+  const diffSec = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffHr < 24) return `${diffHr} hr ago`;
+  if (diffMin > 0) {
+    return `⏳ ${diffMin} min left`;
+  }
 
-  const diffDays = Math.floor(diffHr / 24);
-  return `${diffDays} day ago`;
+  return `⏳ ${diffSec} sec left`;
+};
+
+  const formatExpiryTime = (expiresAt) => {
+  if (!expiresAt) return "";
+
+  const date = expiresAt.toDate();
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 };
 
   const handleLike = async (id, roomData) => {
@@ -114,6 +134,7 @@ const handleDislike = async (id, roomData) => {
 
   return (
     <div>
+      <span style={{ display: "none" }}>{tick}</span>
         <div style={{
   display: "flex",
   justifyContent: "space-between",
@@ -157,15 +178,19 @@ const handleDislike = async (id, roomData) => {
   >
     <h3>{r.block} - {r.room}</h3>
 
-    <p style={{
-  fontSize: "12px",
-  color: "gray",
-  position: "absolute",
-  bottom: "10px",
-  right: "15px"
-}}>
-      updated {getTimeAgo(r.createdAt)}
-    </p>
+    <div
+  style={{
+    fontSize: "12px",
+    color: "gray",
+    position: "absolute",
+    bottom: "10px",
+    right: "15px",
+    textAlign: "right"
+  }}
+>
+  <div>{getTimeLeft(r.expiresAt)}</div>
+  <div>Expires at {formatExpiryTime(r.expiresAt)}</div>
+</div>
 
     <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
   

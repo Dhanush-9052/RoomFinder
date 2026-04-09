@@ -9,6 +9,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isNew, setIsNew] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   const isValidEmail = (email) => {
     return email.endsWith("@vitapstudent.ac.in");
@@ -56,45 +57,67 @@ export default function Auth() {
       </h2>
 
       <input
-        type="email"
-        placeholder="College Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "15px",
-          borderRadius: "6px",
-          border: "1px solid #ccc"
-        }}
-      />
+  type="email"
+  placeholder="College Email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "12px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    boxSizing: "border-box",
+    marginBottom: "15px"
+  }}
+/>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "15px",
-          borderRadius: "6px",
-          border: "1px solid #ccc"
-        }}
-      />
+      <div style={{ position: "relative", marginBottom: "15px" }}>
+
+  <input
+    type={showPass ? "text" : "password"}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    style={{
+      width: "100%",
+      padding: "12px",
+      paddingRight: "40px",
+      borderRadius: "8px",
+      border: "1px solid #ccc",
+      boxSizing: "border-box"
+    }}
+  />
+
+  <span
+    onClick={() => setShowPass(!showPass)}
+    style={{
+      position: "absolute",
+      right: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: "16px",
+      color: "#555"
+    }}
+  >
+    👁
+  </span>
+
+</div>
 
       <button
         onClick={handleSubmit}
         style={{
-          width: "100%",
-          padding: "10px",
-          background: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontWeight: "bold"
-        }}
+  width: "100%",
+  marginTop: "15px",   // ✅ spacing fix
+  padding: "12px",
+  background: "#007bff",
+  color: "white",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontWeight: "bold"
+}}
       >
         {isNew ? "Sign Up" : "Login"}
       </button>
