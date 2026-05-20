@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AddClassroom from "../components/AddClassroom";
 import ClassroomList from "../components/ClassroomList";
+import Events from "../components/Events";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { useEffect, useRef } from "react";
@@ -18,6 +19,7 @@ export default function Home() {
   const user = auth.currentUser;
   const firstLetter = user?.email?.charAt(0).toUpperCase();
   const [darkMode, setDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("classrooms");
   const [showPassword, setShowPassword] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -52,8 +54,12 @@ export default function Home() {
 }, []);
   
   const handleLogout = async () => {
-    await signOut(auth);
-  };
+
+  localStorage.removeItem("isAdminMode");
+  localStorage.removeItem("loginRole");
+
+  await signOut(auth);
+};
 
   const handleVerifyOldPassword = async () => {
   const user = auth.currentUser;
@@ -121,7 +127,52 @@ export default function Home() {
 color: darkMode ? "white" : "black",
         borderBottom: "1px solid #ddd"
       }}>
-        <h2>Available Classrooms</h2>
+        <div style={{
+  display: "flex",
+  gap: "10px"
+}}>
+
+  <button
+    onClick={() => setActiveTab("classrooms")}
+    style={{
+      padding: "10px 18px",
+      border: "none",
+      borderRadius: "8px",
+      cursor: "pointer",
+      background:
+        activeTab === "classrooms"
+          ? "#007bff"
+          : darkMode
+          ? "#444"
+          : "#ccc",
+      color: "white",
+      fontWeight: "bold"
+    }}
+  >
+    Classroom Finder
+  </button>
+
+  <button
+    onClick={() => setActiveTab("events")}
+    style={{
+      padding: "10px 18px",
+      border: "none",
+      borderRadius: "8px",
+      cursor: "pointer",
+      background:
+        activeTab === "events"
+          ? "#007bff"
+          : darkMode
+          ? "#444"
+          : "#ccc",
+      color: "white",
+      fontWeight: "bold"
+    }}
+  >
+    Events
+  </button>
+
+</div>
 
         {/* 🔒 LOGOUT RIGHT */}
         <div ref={profileRef} style={{ position: "relative" }}>
@@ -253,33 +304,42 @@ color: darkMode ? "white" : "black",
         
         {/* 📋 CLASSROOM LIST */}
         <div style={{ flex: 3 }}>
-          <ClassroomList darkMode={darkMode} />
+          {activeTab === "classrooms" ? (
+  <ClassroomList darkMode={darkMode} />
+) : (
+  <Events darkMode={darkMode} />
+)}
         </div>
 
       </div>
 
       {/* ➕ FLOAT BUTTON */}
-      <button
-        onClick={(e) => {
-  e.stopPropagation();
-  setShowAdd(!showAdd);
-}}
-        style={{
-          position: "fixed",
-          bottom: "25px",
-          right: "25px",
-          width: "60px",
-          height: "60px",
-          borderRadius: "50%",
-          fontSize: "28px",
-          background: "#007bff",
-          color: "white",
-          border: "none",
-          cursor: "pointer"
-        }}
-      >
-        +
-      </button>
+      {/* ➕ CLASSROOM BUTTON ONLY */}
+{activeTab === "classrooms" && (
+
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setShowAdd(!showAdd);
+    }}
+    style={{
+      position: "fixed",
+      bottom: "25px",
+      right: "25px",
+      width: "60px",
+      height: "60px",
+      borderRadius: "50%",
+      fontSize: "28px",
+      background: "#007bff",
+      color: "white",
+      border: "none",
+      cursor: "pointer"
+    }}
+  >
+    +
+  </button>
+
+)}
 
       {/* ➕ POPUP */}
       {showAdd && (
