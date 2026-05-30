@@ -145,7 +145,12 @@ color: darkMode ? "white" : "black",
           : darkMode
           ? "#444"
           : "#ccc",
-      color: "white",
+      color:
+  activeTab === "classrooms"
+    ? "white"
+    : darkMode
+    ? "white"
+    : "#333",
       fontWeight: "bold"
     }}
   >
@@ -165,7 +170,12 @@ color: darkMode ? "white" : "black",
           : darkMode
           ? "#444"
           : "#ccc",
-      color: "white",
+      color:
+  activeTab === "events"
+    ? "white"
+    : darkMode
+    ? "white"
+    : "#333",
       fontWeight: "bold"
     }}
   >

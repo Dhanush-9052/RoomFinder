@@ -43,7 +43,7 @@ export default function AddEvent({ darkMode }) {
       type,
       description,
       link,
-      fee,
+      fee: fee || "0",
       image,
 
       createdAt: new Date()
@@ -83,76 +83,114 @@ export default function AddEvent({ darkMode }) {
         Add Event
       </h2>
 
-      <input
-        placeholder="Event Name"
+      <label style={labelStyle}>
+  Event Name <span style={{ color: "red" }}>*</span>
+</label>
+
+<input
+  placeholder="Enter event name"
         value={eventName}
         onChange={(e) => setEventName(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+      <label style={labelStyle}>
+        Club Name <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         placeholder="Club Name"
         value={clubName}
         onChange={(e) => setClubName(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+      <label style={labelStyle}>
+        Venue <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         placeholder="Venue"
         value={venue}
         onChange={(e) => setVenue(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+
+      <label style={labelStyle}>
+        Date <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         type="date"
         min={new Date().toISOString().split("T")[0]}
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
         />
 
+
+      <label style={labelStyle}>
+        Time <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         type="time"
         value={time}
         onChange={(e) => setTime(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+
+      <label style={labelStyle}>
+        Event Type <span style={{ color: "red" }}>*</span>
+      </label>
       <select
         value={type}
         onChange={(e) => setType(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       >
         <option>Technical</option>
         <option>Non-Technical</option>
       </select>
 
+
+      <label style={labelStyle}>
+        Description <span style={{ color: "red" }}>*</span>
+      </label>
       <textarea
         placeholder="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         style={{
-          ...inputStyle,
+          ...inputStyle(darkMode),
           height: "100px",
           resize: "none"
         }}
       />
 
+
+      <label style={labelStyle}>
+        Registration Link
+      </label>
       <input
         placeholder="Registration Link"
         value={link}
         onChange={(e) => setLink(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+
+      <label style={labelStyle}>
+        Entry Fee
+      </label>
       <input
         placeholder="Entry Fee"
         value={fee}
         onChange={(e) => setFee(e.target.value)}
-        style={inputStyle}
+        style={inputStyle(darkMode)}
       />
 
+
+      <label style={labelStyle}>
+        Event Image <span style={{ color: "red" }}>*</span>
+      </label>
       <input
   type="file"
   accept="image/*"
@@ -175,7 +213,7 @@ export default function AddEvent({ darkMode }) {
 
   }}
 
-  style={inputStyle}
+  style={inputStyle(darkMode)}
 />
 
       <button
@@ -201,11 +239,30 @@ export default function AddEvent({ darkMode }) {
 
 }
 
-const inputStyle = {
+const labelStyle = {
+  fontWeight: "bold",
+  marginBottom: "6px",
+  display: "block"
+};
+
+const inputStyle = (darkMode) => ({
   width: "100%",
   padding: "12px",
   marginBottom: "12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
-  boxSizing: "border-box"
-};
+  border: darkMode
+    ? "1px solid #777"
+    : "1px solid #ccc",
+
+  background: darkMode
+    ? "#444"
+    : "white",
+
+  color: darkMode
+    ? "white"
+    : "black",
+
+  boxSizing: "border-box",
+
+  outline: "none"
+});
