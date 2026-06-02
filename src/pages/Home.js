@@ -20,6 +20,8 @@ export default function Home() {
   const firstLetter = user?.email?.charAt(0).toUpperCase();
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState("classrooms");
+  const [showSavedEvents, setShowSavedEvents] =
+  useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -284,6 +286,32 @@ color: darkMode ? "white" : "black",
   🔑 Change Password
 </button>
 
+  <button
+
+  onClick={() => {
+
+    setActiveTab("events");
+
+    setShowSavedEvents(true);
+
+    setShowProfile(false);
+
+  }}
+
+  style={{
+    width: "100%",
+    padding: "10px",
+    marginBottom: "10px",
+    background: "#f59e0b",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer"
+  }}
+>
+  ⭐ Saved Events
+</button>
+  
   {/* 🔒 LOGOUT BUTTON */}
   <button
     onClick={handleLogout}
@@ -317,7 +345,19 @@ color: darkMode ? "white" : "black",
           {activeTab === "classrooms" ? (
   <ClassroomList darkMode={darkMode} />
 ) : (
-  <Events darkMode={darkMode} />
+  <Events
+
+  darkMode={darkMode}
+
+  showSavedEvents={
+    showSavedEvents
+  }
+
+  setShowSavedEvents={
+    setShowSavedEvents
+  }
+
+/>
 )}
         </div>
 

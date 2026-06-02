@@ -5,19 +5,40 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  setDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc as removeDoc
 } from "firebase/firestore";
 
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 
-export default function Events({ darkMode }) {
+export default function Events({
+
+  darkMode,
+
+  showSavedEvents,
+
+  setShowSavedEvents
+
+}) {
 
   const [showAddEvent, setShowAddEvent] =
     useState(false);
     const [events, setEvents] = useState([]);
+    const [savedEvents, setSavedEvents] =
+    useState([]);
     const [search, setSearch] = useState("");
-    const [filter, setFilter] =
+    const [dateFilter, setDateFilter] =
   useState("today");
+
+const [typeFilter, setTypeFilter] =
+  useState("all");
+
+const [feeFilter, setFeeFilter] =
+  useState("all");
 
 const [selectedDate, setSelectedDate] =
   useState("");
@@ -27,6 +48,58 @@ const [selectedDate, setSelectedDate] =
   // ✅ Check admin mode
   const isAdminMode =
     localStorage.getItem("isAdminMode") === "true";
+
+
+    const handleSaveEvent = async (eventId) => {
+
+  const user = auth.currentUser;
+
+  if (!user) return;
+
+  const docId =
+    `${user.uid}_${eventId}`;
+
+  try {
+
+    if (
+      savedEvents.includes(eventId)
+    ) {
+
+      await removeDoc(
+        doc(db, "savedEvents", docId)
+      );
+
+      setSavedEvents(
+        savedEvents.filter(
+          (id) => id !== eventId
+        )
+      );
+
+    } else {
+
+      await setDoc(
+        doc(db, "savedEvents", docId),
+        {
+          userId: user.uid,
+          eventId,
+          savedAt: new Date()
+        }
+      );
+
+      setSavedEvents([
+        ...savedEvents,
+        eventId
+      ]);
+
+    }
+
+  } catch (err) {
+
+    alert(err.message);
+
+  }
+
+};
 
     const handleDelete = async (id) => {
 
@@ -164,6 +237,30 @@ const data = snapshot.docs
 })
 
       setEvents(data);
+      
+      const loadSavedEvents = async () => {
+
+  const user = auth.currentUser;
+
+  if (!user) return;
+
+  const q = query(
+    collection(db, "savedEvents"),
+    where("userId", "==", user.uid)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const savedIds =
+    snapshot.docs.map(
+      (doc) => doc.data().eventId
+    );
+
+  setSavedEvents(savedIds);
+
+};
+
+loadSavedEvents();
 
     }
 
@@ -180,7 +277,44 @@ const data = snapshot.docs
       position: "relative"
     }}>
 
-      <h2>Campus Events</h2>
+      <h2>
+
+  {showSavedEvents
+    ? "⭐ Saved Events"
+    : "Campus Events"}
+
+</h2>
+
+  {showSavedEvents && (
+
+  <button
+
+    onClick={() =>
+      setShowSavedEvents(false)
+    }
+
+    style={{
+
+      marginBottom: "15px",
+
+      padding: "8px 14px",
+
+      border: "none",
+
+      borderRadius: "8px",
+
+      background: "#007bff",
+
+      color: "white",
+
+      cursor: "pointer"
+
+    }}
+  >
+    ← Back to Events
+  </button>
+
+)}
       <div style={{
 
   display: "flex",
@@ -248,74 +382,111 @@ const data = snapshot.docs
 
 }}>
 
-  <select
+  {/* DATE FILTER */}
+<select
+  value={dateFilter}
+  onChange={(e) =>
+    setDateFilter(e.target.value)
+  }
+  style={filterStyle}
+>
+  <option value="today">
+    Today's Events
+  </option>
 
-    value={filter}
+  <option value="all">
+    All Events
+  </option>
 
-    onChange={(e) => {
+  <option value="selected">
+    Select Date
+  </option>
+</select>
 
-      setFilter(e.target.value);
+{/* TYPE FILTER */}
+<select
+  value={typeFilter}
+  onChange={(e) =>
+    setTypeFilter(e.target.value)
+  }
+  style={filterStyle}
+>
+  <option value="all">
+    All Types
+  </option>
 
-    }}
+  <option value="Technical">
+    Technical
+  </option>
 
-    style={{
+  <option value="Non-Technical">
+    Non-Technical
+  </option>
+</select>
 
-      padding: "14px",
+{/* FEE FILTER */}
+<select
+  value={feeFilter}
+  onChange={(e) =>
+    setFeeFilter(e.target.value)
+  }
+  style={filterStyle}
+>
+  <option value="all">
+    All Fees
+  </option>
 
-      borderRadius: "12px",
+  <option value="free">
+    Free Events
+  </option>
 
-      border:
-        darkMode
-          ? "1px solid #444"
-          : "1px solid #ccc",
+  <option value="paid">
+    Paid Events
+  </option>
+</select>
+<button
 
-      background:
-        darkMode ? "#1e1e2f" : "white",
+  onClick={() => {
 
-      color:
-        darkMode ? "white" : "black",
+    setDateFilter("today");
 
-      minWidth: "190px",
+    setTypeFilter("all");
 
-      fontSize: "15px",
+    setFeeFilter("all");
 
-      outline: "none"
+    setSelectedDate("");
 
-    }}
-  >
+    setSearch("");
 
-    <option value="today">
-      Today's Events
-    </option>
+  }}
 
-    <option value="all">
-      All Events
-    </option>
+  style={{
 
-    <option value="technical">
-      Technical
-    </option>
+  padding: "8px 12px",
 
-    <option value="nontechnical">
-      Non-Technical
-    </option>
+  borderRadius: "8px",
 
-    <option value="free">
-      Free Events
-    </option>
+  border: "none",
 
-    <option value="paid">
-      Paid Events
-    </option>
+  background: "#dc3545",
 
-    <option value="date">
-      Select Date
-    </option>
+  color: "white",
 
-  </select>
+  cursor: "pointer",
+
+  fontWeight: "bold",
+
+  fontSize: "13px",
+
+  height: "40px"
+
+}}
+>
+  🔄 Reset
+</button>
 
   {/* 📅 DATE PICKER */}
-  {filter === "date" && (
+  {dateFilter === "selected" && (
 
     <input
 
@@ -369,8 +540,15 @@ const data = snapshot.docs
   <p>No events available</p>
 
 ) : (
+  
+  
+ [...events]
 
-  events
+.sort(
+  (a, b) =>
+    new Date(a.date) -
+    new Date(b.date)
+)
 
 .filter((event) => {
 
@@ -398,6 +576,15 @@ const data = snapshot.docs
 
   );
 
+  let matchesSaved = true;
+
+if (
+  showSavedEvents &&
+  !savedEvents.includes(event.id)
+) {
+  matchesSaved = false;
+}
+
   // 📅 TODAY DATE
   const today =
     new Date()
@@ -407,61 +594,73 @@ const data = snapshot.docs
   // 🎯 FILTER CONDITIONS
   let matchesFilter = true;
 
-  if (filter === "today") {
+// DATE FILTER
+if (
+  dateFilter === "today" &&
+  event.date !== today
+) {
+  matchesFilter = false;
+}
 
-    matchesFilter =
-      event.date === today;
+if (
+  dateFilter === "selected" &&
+  event.date !== selectedDate
+) {
+  matchesFilter = false;
+}
 
-  }
+// TYPE FILTER
+if (
+  typeFilter !== "all" &&
+  event.type !== typeFilter
+) {
+  matchesFilter = false;
+}
 
-  else if (filter === "technical") {
+// FEE FILTER
+if (
+  feeFilter === "free" &&
+  Number(event.fee || 0) > 0
+) {
+  matchesFilter = false;
+}
 
-    matchesFilter =
-      event.type === "Technical";
-
-  }
-
-  else if (
-    filter === "nontechnical"
-  ) {
-
-    matchesFilter =
-      event.type === "Non-Technical";
-
-  }
-
-  else if (filter === "free") {
-
-    matchesFilter =
-      !event.fee ||
-      Number(event.fee) === 0;
-
-  }
-
-  else if (filter === "paid") {
-
-    matchesFilter =
-      Number(event.fee) > 0;
-
-  }
-
-  else if (
-    filter === "date"
-  ) {
-
-    matchesFilter =
-      event.date === selectedDate;
-
-  }
+if (
+  feeFilter === "paid" &&
+  Number(event.fee || 0) === 0
+) {
+  matchesFilter = false;
+}
 
   return (
-    matchesSearch &&
-    matchesFilter
-  );
+  matchesSearch &&
+  matchesFilter &&
+  matchesSaved
+);
 
 })
 
-.map((event) => (
+.map((event) => {
+
+const today = new Date();
+
+today.setHours(0,0,0,0);
+
+const eventDate =
+  new Date(event.date);
+
+eventDate.setHours(0,0,0,0);
+
+const diffDays =
+(
+  eventDate - today
+)
+/
+(
+  1000 * 60 * 60 * 24
+);
+
+return (
 
   <div
     key={event.id}
@@ -530,26 +729,87 @@ const data = snapshot.docs
           {event.eventName}
         </h2>
 
-        <span
-          style={{
-            background:
-              event.type === "Technical"
-                ? "#0F766E"
-                : "#7C3AED",
+        <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  }}
+>
 
-            color: "white",
+  {diffDays === 0 && (
 
-            padding: "6px 14px",
+  <span
+    style={{
+      background: "#16a34a",
+      color: "white",
+      padding: "6px 12px",
+      borderRadius: "20px",
+      fontSize: "12px",
+      fontWeight: "bold"
+    }}
+  >
+    TODAY
+  </span>
 
-            borderRadius: "20px",
+)}
 
-            fontSize: "13px",
+{diffDays === 1 && (
 
-            fontWeight: "bold"
-          }}
-        >
-          {event.type}
-        </span>
+  <span
+    style={{
+      background: "#f59e0b",
+      color: "white",
+      padding: "6px 12px",
+      borderRadius: "20px",
+      fontSize: "12px",
+      fontWeight: "bold"
+    }}
+  >
+    TOMORROW
+  </span>
+
+)}
+  <span
+    style={{
+      background:
+        event.type === "Technical"
+          ? "#0F766E"
+          : "#7C3AED",
+
+      color: "white",
+
+      padding: "6px 14px",
+
+      borderRadius: "20px",
+
+      fontSize: "13px",
+
+      fontWeight: "bold"
+    }}
+  >
+    {event.type}
+  </span>
+
+  <button
+
+    onClick={() =>
+      handleSaveEvent(event.id)
+    }
+
+    style={{
+      background: "transparent",
+      border: "none",
+      fontSize: "28px",
+      cursor: "pointer"
+    }}
+  >
+    {savedEvents.includes(event.id)
+      ? "★"
+      : "☆"}
+  </button>
+
+</div>
 
       </div>
 
@@ -706,7 +966,9 @@ const data = snapshot.docs
     </div>
   </div>
 
-))
+);
+
+})
 
 )}
 
@@ -1062,6 +1324,22 @@ const editInput = {
   marginBottom: "12px",
   borderRadius: "8px",
   border: "1px solid #ccc",
+  boxSizing: "border-box"
+
+};
+
+const filterStyle = {
+
+  padding: "12px",
+
+  borderRadius: "12px",
+
+  border: "1px solid #ccc",
+
+  fontSize: "15px",
+
+  minWidth: "160px",
+
   boxSizing: "border-box"
 
 };
