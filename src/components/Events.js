@@ -39,9 +39,19 @@ const [typeFilter, setTypeFilter] =
 
 const [feeFilter, setFeeFilter] =
   useState("all");
+  const [tempDateFilter, setTempDateFilter] =
+  useState("today");
+
+const [tempTypeFilter, setTempTypeFilter] =
+  useState("all");
+
+const [tempFeeFilter, setTempFeeFilter] =
+  useState("all");
 
 const [selectedDate, setSelectedDate] =
   useState("");
+  const [showFilters, setShowFilters] =
+  useState(false);
     const [editingEvent, setEditingEvent] =
     useState(null);
 
@@ -335,7 +345,11 @@ loadSavedEvents();
   <input
     type="text"
 
-    placeholder="🔍 Search events, club, venue..."
+    placeholder={
+  showSavedEvents
+    ? "🔍 Search saved events..."
+    : "🔍 Search events, club, venue..."
+}
 
     value={search}
 
@@ -371,24 +385,110 @@ loadSavedEvents();
     }}
   />
 
-  {/* 🎯 FILTER */}
+{/* 🎯 FILTER */}
+{!showSavedEvents && (
+
+<div style={{ position: "relative" }}>
+
+<button
+
+  onClick={() =>
+    setShowFilters(!showFilters)
+  }
+
+  style={{
+    padding: "12px 18px",
+    borderRadius: "12px",
+    border: "none",
+    background: "#007bff",
+    color: "white",
+    fontWeight: "bold",
+    cursor: "pointer"
+  }}
+>
+  ⚙️ Filter
+</button>
+
+{showFilters && (
+
 <div style={{
 
-  display: "flex",
+  position: "absolute",
 
-  alignItems: "center",
+  top: "50px",
 
-  gap: "12px"
+  right: 0,
+
+  width: "250px",
+
+  background:
+    darkMode ? "#2c2c3e" : "white",
+
+  padding: "15px",
+
+  borderRadius: "12px",
+
+  boxShadow:
+  "0 4px 15px rgba(0,0,0,0.15)",
+
+  zIndex: 1000
+  
 
 }}>
+  <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "15px",
+    borderBottom: "1px solid #ddd",
+    paddingBottom: "10px"
+  }}
+>
+  <h3
+    style={{
+      margin: 0,
+      fontSize: "18px"
+    }}
+  >
+    ⚙️ Filter Events
+  </h3>
+
+  <button
+
+    onClick={() =>
+      setShowFilters(false)
+    }
+
+    style={{
+      border: "none",
+      background: "none",
+      fontSize: "20px",
+      cursor: "pointer"
+    }}
+  >
+    ✕
+  </button>
+</div>
+
+ <h4 style={{
+  marginTop: "12px",
+  marginBottom: "5px",
+  fontSize: "14px"
+}}>
+  📅 Date
+</h4>
 
   {/* DATE FILTER */}
 <select
-  value={dateFilter}
+  value={tempDateFilter}
   onChange={(e) =>
-    setDateFilter(e.target.value)
+    setTempDateFilter(e.target.value)
   }
-  style={filterStyle}
+  style={{
+  ...filterStyle,
+  width: "100%"
+}}
 >
   <option value="today">
     Today's Events
@@ -403,90 +503,8 @@ loadSavedEvents();
   </option>
 </select>
 
-{/* TYPE FILTER */}
-<select
-  value={typeFilter}
-  onChange={(e) =>
-    setTypeFilter(e.target.value)
-  }
-  style={filterStyle}
->
-  <option value="all">
-    All Types
-  </option>
-
-  <option value="Technical">
-    Technical
-  </option>
-
-  <option value="Non-Technical">
-    Non-Technical
-  </option>
-</select>
-
-{/* FEE FILTER */}
-<select
-  value={feeFilter}
-  onChange={(e) =>
-    setFeeFilter(e.target.value)
-  }
-  style={filterStyle}
->
-  <option value="all">
-    All Fees
-  </option>
-
-  <option value="free">
-    Free Events
-  </option>
-
-  <option value="paid">
-    Paid Events
-  </option>
-</select>
-<button
-
-  onClick={() => {
-
-    setDateFilter("today");
-
-    setTypeFilter("all");
-
-    setFeeFilter("all");
-
-    setSelectedDate("");
-
-    setSearch("");
-
-  }}
-
-  style={{
-
-  padding: "8px 12px",
-
-  borderRadius: "8px",
-
-  border: "none",
-
-  background: "#dc3545",
-
-  color: "white",
-
-  cursor: "pointer",
-
-  fontWeight: "bold",
-
-  fontSize: "13px",
-
-  height: "40px"
-
-}}
->
-  🔄 Reset
-</button>
-
-  {/* 📅 DATE PICKER */}
-  {dateFilter === "selected" && (
+{/* 📅 DATE PICKER */}
+  {tempDateFilter === "selected" && (
 
     <input
 
@@ -496,17 +514,22 @@ loadSavedEvents();
 
       value={selectedDate}
 
-      onChange={(e) =>
-        setSelectedDate(e.target.value)
-      }
+      onChange={(e) => {
+
+  setSelectedDate(e.target.value);
+
+}}
 
       style={{
 
         boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
 
-        padding: "12px",
+        padding: "8px",
 
         borderRadius: "12px",
+        width: "100%",
+boxSizing: "border-box",
+marginTop: "5px",
 
         border:
           darkMode
@@ -530,8 +553,188 @@ loadSavedEvents();
 
   )}
 
-</div>
+<h4 style={{
+  marginTop: "12px",
+  marginBottom: "5px",
+  fontSize: "14px"
+}}>
+  🏷️ Event Type
+</h4>
+
+{/* TYPE FILTER */}
+<select
+  value={tempTypeFilter}
+  onChange={(e) => {
+
+  setTempTypeFilter(e.target.value);
+
+}}
+  style={{
+  ...filterStyle,
+  width: "100%"
+}}
+>
+  <option value="all">
+    All Types
+  </option>
+
+  <option value="Technical">
+    Technical
+  </option>
+
+  <option value="Non-Technical">
+    Non-Technical
+  </option>
+</select>
+
+
+<h4 style={{
+  marginTop: "12px",
+  marginBottom: "5px",
+  fontSize: "14px"
+}}>
+  💰 Fee
+</h4>
+
+{/* FEE FILTER */}
+<select
+  value={tempFeeFilter}
+  onChange={(e) => {
+
+  setTempFeeFilter(e.target.value);
+
+}}
+  style={{
+  ...filterStyle,
+  width: "100%"
+}}
+>
+  <option value="all">
+    All Fees
+  </option>
+
+  <option value="free">
+    Free Events
+  </option>
+
+  <option value="paid">
+    Paid Events
+  </option>
+</select>
+
+<button
+
+  onClick={() => {
+
+  setDateFilter(tempDateFilter);
+
+  setTypeFilter(tempTypeFilter);
+
+  setFeeFilter(tempFeeFilter);
+
+  if (tempDateFilter !== "selected") {
+
+    setSelectedDate("");
+
+  }
+
+  setShowFilters(false);
+
+}}
+
+  style={{
+
+    width: "100%",
+
+    marginTop: "10px",
+
+    marginBottom: "10px",
+
+    padding: "10px",
+    fontSize: "14px",
+
+    borderRadius: "8px",
+
+    border: "none",
+
+    background: "#28a745",
+
+    color: "white",
+
+    cursor: "pointer",
+
+    fontWeight: "bold"
+
+  }}
+>
+  ✅ Apply Filters
+</button>
+<button
+
+  onClick={() => {
+
+  setDateFilter("today");
+  setTypeFilter("all");
+  setFeeFilter("all");
+
+  setTempDateFilter("today");
+  setTempTypeFilter("all");
+  setTempFeeFilter("all");
+
+  setSelectedDate("");
+
+  setSearch("");
+  setShowFilters(false);
+
+}}
+
+  style={{
+
+    width: "100%",
+
+    marginTop: "10px",
+
+    padding: "10px",
+    fontSize: "14px",
+
+    borderRadius: "8px",
+
+    border: "none",
+
+    background: "#dc3545",
+
+    color: "white",
+
+    cursor: "pointer",
+
+    fontWeight: "bold"
+
+  }}
+>
+  🔄 Reset Filters
+</button>
+
+<hr style={{ marginTop: "20px" }} />
+
+<p
+  style={{
+    textAlign: "center",
+    color: "#888",
+    fontSize: "11px"
+  }}
+>
+  💡 Filters help you find events quickly.
+</p>
+
   
+
+</div>
+
+)}
+
+</div>
+
+)}
 
 </div>
 
@@ -596,6 +799,7 @@ if (
 
 // DATE FILTER
 if (
+  !showSavedEvents &&
   dateFilter === "today" &&
   event.date !== today
 ) {
@@ -603,6 +807,7 @@ if (
 }
 
 if (
+  !showSavedEvents &&
   dateFilter === "selected" &&
   event.date !== selectedDate
 ) {
