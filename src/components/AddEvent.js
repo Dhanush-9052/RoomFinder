@@ -2,7 +2,10 @@ import { useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-export default function AddEvent({ darkMode }) {
+export default function AddEvent({
+  darkMode,
+  onClose
+}) {
 
   const [eventName, setEventName] = useState("");
   const [clubName, setClubName] = useState("");
@@ -50,7 +53,8 @@ export default function AddEvent({ darkMode }) {
 
     });
 
-    alert("Event added successfully!");
+    alert("✅ Event added successfully!");
+    onClose && onClose();
 
     // ✅ Clear form
     setEventName("");

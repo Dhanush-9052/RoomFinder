@@ -58,14 +58,14 @@ export default function AddClassroom({ onAdd, darkMode }) {
     }
 
     await addDoc(collection(db, "classrooms"), {
-      block,
-      room,
-      createdAt: Timestamp.now(),
-      expiresAt: Timestamp.fromDate(expires),
-      likes: 0,
-      dislikes: 0,
-      votedUsers: []
-    });
+  block,
+  room,
+  createdAt: Timestamp.now(),
+  expiresAt: Timestamp.fromDate(expires),
+  likes: 0,
+  dislikes: 0,
+  userVotes: {}
+});
 
     onAdd && onAdd();
     alert("Classroom added!");

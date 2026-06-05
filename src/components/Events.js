@@ -455,20 +455,21 @@ loadSavedEvents();
   </h3>
 
   <button
+  onClick={() => setShowFilters(false)}
+  style={{
+    border: "none",
+    background: "transparent",
+    fontSize: "22px",
+    fontWeight: "bold",
+    cursor: "pointer",
 
-    onClick={() =>
-      setShowFilters(false)
-    }
-
-    style={{
-      border: "none",
-      background: "none",
-      fontSize: "20px",
-      cursor: "pointer"
-    }}
-  >
-    ✕
-  </button>
+    color: darkMode
+      ? "#ffffff"
+      : "#111827"
+  }}
+>
+  ✕
+</button>
 </div>
 
  <h4 style={{
@@ -1235,7 +1236,10 @@ return (
             }}
           >
 
-            <AddEvent darkMode={darkMode} />
+            <AddEvent
+  darkMode={darkMode}
+  onClose={() => setShowAddEvent(false)}
+/>
 
           </div>
 
@@ -1283,7 +1287,14 @@ return (
       }}
     >
 
-      <h2>Edit Event</h2>
+      <h2
+  style={{
+    textAlign: "center",
+    marginBottom: "20px"
+  }}
+>
+  Edit Event
+</h2>
 
       <label style={editLabel}>
         Event Name <span style={{ color: "red" }}>*</span>
@@ -1299,7 +1310,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 <label style={editLabel}>
@@ -1316,7 +1327,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 
@@ -1335,7 +1346,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 <label style={editLabel}>
@@ -1354,7 +1365,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 
@@ -1374,7 +1385,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 
@@ -1392,7 +1403,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 >
   <option>Technical</option>
   <option>Non-Technical</option>
@@ -1415,8 +1426,9 @@ return (
   }
 
   style={{
-    ...editInput,
-    height: "120px"
+    ...editInput(darkMode),
+    height: "120px",
+    resize: "none"
   }}
 />
 
@@ -1435,7 +1447,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 
@@ -1454,7 +1466,7 @@ return (
     })
   }
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
 {/* 🖼️ IMAGE CHANGE */}
@@ -1486,7 +1498,7 @@ return (
 
   }}
 
-  style={editInput}
+  style={editInput(darkMode)}
 />
 
       <button
@@ -1522,16 +1534,31 @@ const editLabel = {
   display: "block"
 };
 
-const editInput = {
+const editInput = (darkMode) => ({
 
   width: "100%",
   padding: "12px",
   marginBottom: "12px",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
-  boxSizing: "border-box"
 
-};
+  borderRadius: "8px",
+
+  border: darkMode
+    ? "1px solid #777"
+    : "1px solid #ccc",
+
+  background: darkMode
+    ? "#444"
+    : "white",
+
+  color: darkMode
+    ? "white"
+    : "black",
+
+  boxSizing: "border-box",
+
+  outline: "none"
+
+});
 
 const filterStyle = {
 
