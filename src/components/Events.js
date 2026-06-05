@@ -999,21 +999,29 @@ return (
 
   <button
 
-    onClick={() =>
-      handleSaveEvent(event.id)
-    }
+  onClick={() =>
+    handleSaveEvent(event.id)
+  }
 
-    style={{
-      background: "transparent",
-      border: "none",
-      fontSize: "28px",
-      cursor: "pointer"
-    }}
-  >
-    {savedEvents.includes(event.id)
-      ? "★"
-      : "☆"}
-  </button>
+  style={{
+    background: "transparent",
+    border: "none",
+    fontSize: "36px",
+    cursor: "pointer",
+
+    color: savedEvents.includes(event.id)
+      ? "#FFD709"
+      : darkMode
+      ? "#FFFFFF"
+      : "#000000",
+
+    transition: "all 0.2s ease"
+  }}
+>
+  {savedEvents.includes(event.id)
+    ? "★"
+    : "☆"}
+</button>
 
 </div>
 
