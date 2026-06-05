@@ -9,12 +9,14 @@ import {
   where,
   doc,
   updateDoc,
-  increment
+  increment,
+  deleteField
 } from "firebase/firestore";
 
 export default function ClassroomList({ darkMode }) {
   const [rooms, setRooms] = useState([]);
   const [block, setBlock] = useState("ALL");
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
   const q =
@@ -55,73 +57,142 @@ export default function ClassroomList({ darkMode }) {
 
   return () => unsubscribe();
 }, [block]);
+useEffect(() => {
+  const interval = setInterval(() => {
+    setTick(prev => prev + 1);
+  }, 1000);
 
-  // ⏱ Format time
-  const getTimeAgo = (timestamp) => {
-  if (!timestamp) return "";
+  return () => clearInterval(interval);
+}, []);
+
+  const getTimeLeft = (expiresAt) => {
+  if (!expiresAt) return "";
 
   const now = new Date();
-  const created = timestamp.toDate();
+  const expiry = expiresAt.toDate();
 
-  const diffMs = now - created;
+  const diffMs = expiry - now;
+
+  if (diffMs <= 0) return "Expired";
+
   const diffMin = Math.floor(diffMs / (1000 * 60));
-  const diffHr = Math.floor(diffMin / 60);
+  const diffSec = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffHr < 24) return `${diffHr} hr ago`;
+  if (diffMin > 0) {
+    return `⏳ ${diffMin} min left`;
+  }
 
-  const diffDays = Math.floor(diffHr / 24);
-  return `${diffDays} day ago`;
+  return `⏳ ${diffSec} sec left`;
 };
 
-  const handleLike = async (id) => {
+  const formatExpiryTime = (expiresAt) => {
+  if (!expiresAt) return "";
+
+  const date = expiresAt.toDate();
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+const getBlockIcon = (block) => {
+  switch (block) {
+    case "AB1":
+      return "🏫";
+
+    case "AB2":
+      return "🏢";
+
+    case "CB":
+      return "🏬";
+
+    default:
+      return "🏫";
+  }
+};
+  const handleLike = async (id, roomData) => {
   const user = auth.currentUser;
+
   if (!user) return;
 
-  const likeKey = user.email + "_like_" + id;
-  const dislikeKey = user.email + "_dislike_" + id;
+  const voteKey = user.uid;
 
-  // ❌ if already reacted (like OR dislike)
-  if (localStorage.getItem(likeKey) || localStorage.getItem(dislikeKey)) {
-    alert("You have already reacted to this classroom");
-    return;
-  }
+  const currentVote = roomData.userVotes?.[voteKey];
 
   const ref = doc(db, "classrooms", id);
 
-  await updateDoc(ref, {
-    likes: increment(1)
-  });
+  if (currentVote === "like") {
 
-  localStorage.setItem(likeKey, "true");
+    // remove like
+    await updateDoc(ref, {
+      likes: increment(-1),
+      [`userVotes.${voteKey}`]: deleteField()
+    });
+
+  } else if (currentVote === "dislike") {
+
+    // dislike -> like
+    await updateDoc(ref, {
+      dislikes: increment(-1),
+      likes: increment(1),
+      [`userVotes.${voteKey}`]: "like"
+    });
+
+  } else {
+
+    // first like
+    await updateDoc(ref, {
+      likes: increment(1),
+      [`userVotes.${voteKey}`]: "like"
+    });
+
+  }
 };
 
 
-const handleDislike = async (id) => {
+const handleDislike = async (id, roomData) => {
   const user = auth.currentUser;
+
   if (!user) return;
 
-  const likeKey = user.email + "_like_" + id;
-  const dislikeKey = user.email + "_dislike_" + id;
+  const voteKey = user.uid;
 
-  // ❌ if already reacted (like OR dislike)
-  if (localStorage.getItem(likeKey) || localStorage.getItem(dislikeKey)) {
-    alert("You have already reacted to this classroom");
-    return;
-  }
+  const currentVote = roomData.userVotes?.[voteKey];
 
   const ref = doc(db, "classrooms", id);
 
-  await updateDoc(ref, {
-    dislikes: increment(1)
-  });
+  if (currentVote === "dislike") {
 
-  localStorage.setItem(dislikeKey, "true");
+    // remove dislike
+    await updateDoc(ref, {
+      dislikes: increment(-1),
+      [`userVotes.${voteKey}`]: deleteField()
+    });
+
+  } else if (currentVote === "like") {
+
+    // like -> dislike
+    await updateDoc(ref, {
+      likes: increment(-1),
+      dislikes: increment(1),
+      [`userVotes.${voteKey}`]: "dislike"
+    });
+
+  } else {
+
+    // first dislike
+    await updateDoc(ref, {
+      dislikes: increment(1),
+      [`userVotes.${voteKey}`]: "dislike"
+    });
+
+  }
 };
 
   return (
     <div>
+      <span style={{ display: "none" }}>{tick}</span>
         <div style={{
   display: "flex",
   justifyContent: "space-between",
@@ -155,54 +226,190 @@ const handleDislike = async (id) => {
     key={r.id}
     style={{
   position: "relative",
-  background: darkMode ? "#2c2c3e" : "white",
+
+  background: darkMode
+    ? "#2c2c3e"
+    : "linear-gradient(180deg,#ffffff,#fafcff)",
+
   color: darkMode ? "white" : "black",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  padding: "15px",
+
+  boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
+  border: "1px solid #eef2ff",
+
+  padding: "20px",
+  minHeight: "110px",
   marginBottom: "15px",
-  borderRadius: "10px"
+  borderRadius: "14px"
 }}
   >
-    <h3>{r.block} - {r.room}</h3>
+    <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center"
+  }}
+>
+  <div>
+    <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  }}
+>
+  <div
+    style={{
+      width: "42px",
+      height: "42px",
+      borderRadius: "50%",
+      background: "#eff6ff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "20px"
+    }}
+  >
+    {getBlockIcon(r.block)}
+  </div>
 
-    <p style={{
-  fontSize: "12px",
-  color: "gray",
-  position: "absolute",
-  bottom: "10px",
-  right: "15px"
-}}>
-      updated {getTimeAgo(r.createdAt)}
+  <h3
+    style={{
+      margin: 0,
+      fontSize: "22px",
+      fontWeight: "700"
+    }}
+  >
+    {r.block} - {r.room}
+  </h3>
+</div>
+
+    <p
+      style={{
+        marginTop: "6px",
+        color: "#64748b",
+        fontSize: "14px"
+      }}
+    >
+      Available classroom reported by students
     </p>
+    <div
+  style={{
+    display: "inline-block",
+    background: "#dcfce7",
+    color: "#16a34a",
+    padding: "5px 12px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: "600",
+    marginTop: "6px"
+  }}
+>
+  🟢 Available Now
+</div>
+  </div>
+</div>
+
+    <div
+  style={{
+    fontSize: "12px",
+    color: "gray",
+    position: "absolute",
+    bottom: "10px",
+    right: "15px",
+    textAlign: "right"
+  }}
+>
+  <div>
+  ⌛ {getTimeLeft(r.expiresAt).replace("⏳","")}
+</div>
+
+<div>
+  🕒 Until {formatExpiryTime(r.expiresAt)}
+</div>
+</div>
 
     <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
   
   <button
-    onClick={() => handleLike(r.id)}
+  onClick={() => handleLike(r.id, r)}
+
+  onMouseEnter={(e)=>{
+    e.currentTarget.style.transform="translateY(-2px)";
+  }}
+
+  onMouseLeave={(e)=>{
+    e.currentTarget.style.transform="translateY(0px)";
+  }}
     style={{
-      background: "#28a745",
-      color: "white",
-      border: "none",
-      padding: "6px 10px",
-      borderRadius: "6px",
-      cursor: "pointer"
-    }}
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+
+  background:
+    r.userVotes?.[auth.currentUser?.uid] === "like"
+      ? "#dcfce7"
+      : "#f8fafc",
+
+  color:
+    r.userVotes?.[auth.currentUser?.uid] === "like"
+      ? "#16a34a"
+      : "#475569",
+
+  border:
+    r.userVotes?.[auth.currentUser?.uid] === "like"
+      ? "1px solid #16a34a"
+      : "1px solid #e2e8f0",
+
+  padding: "12px 20px",
+  borderRadius: "50px",
+  cursor: "pointer",
+  fontWeight: "600",
+  fontSize: "15px",
+  transition: "all .2s ease"
+}}
   >
-    👍 {r.likes || 0}
+    ✓ Available {r.likes || 0}
   </button>
 
   <button
-    onClick={() => handleDislike(r.id)}
+  onClick={() => handleDislike(r.id, r)}
+
+  onMouseEnter={(e)=>{
+    e.currentTarget.style.transform="translateY(-2px)";
+  }}
+
+  onMouseLeave={(e)=>{
+    e.currentTarget.style.transform="translateY(0px)";
+  }}
     style={{
-      background: "#dc3545",
-      color: "white",
-      border: "none",
-      padding: "6px 10px",
-      borderRadius: "6px",
-      cursor: "pointer"
-    }}
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+
+  background:
+    r.userVotes?.[auth.currentUser?.uid] === "dislike"
+      ? "#fee2e2"
+      : "#f8fafc",
+
+  color:
+    r.userVotes?.[auth.currentUser?.uid] === "dislike"
+      ? "#dc2626"
+      : "#475569",
+
+  border:
+    r.userVotes?.[auth.currentUser?.uid] === "dislike"
+      ? "1px solid #dc2626"
+      : "1px solid #e2e8f0",
+
+  padding: "12px 20px",
+  borderRadius: "50px",
+  cursor: "pointer",
+  fontWeight: "600",
+  fontSize: "15px",
+  transition: "all .2s ease"
+}}
   >
-    👎 {r.dislikes || 0}
+    ✕ Not Available {r.dislikes || 0}
   </button>
 
 </div>

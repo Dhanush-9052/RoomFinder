@@ -11,3 +11,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* ❌ Remove browser password eye icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* ❌ Remove Chrome autofill icon */
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+}

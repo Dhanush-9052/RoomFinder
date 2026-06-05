@@ -3,7 +3,7 @@ import { db } from "../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { query, where, getDocs } from "firebase/firestore";
 
-export default function AddClassroom({ onAdd }) {
+export default function AddClassroom({ onAdd, darkMode }) {
   const [block, setBlock] = useState("AB1");
   const [room, setRoom] = useState("");
 
@@ -46,16 +46,26 @@ export default function AddClassroom({ onAdd }) {
     }
 
     // ⏳ Expiry
-    const expires = new Date(now.getTime() + 45 * 60 * 1000);
+    const expires = new Date(now);
+
+    if (now.getMinutes() < 50) {
+      // same hour → set to XX:50
+      expires.setMinutes(50, 0, 0);
+    } else {
+      // next hour → set to next XX:50
+      expires.setHours(now.getHours() + 1);
+      expires.setMinutes(50, 0, 0);
+    }
 
     await addDoc(collection(db, "classrooms"), {
-      block,
-      room,
-      createdAt: Timestamp.now(),
-      expiresAt: Timestamp.fromDate(expires),
-      likes: 0,
-      dislikes: 0
-    });
+  block,
+  room,
+  createdAt: Timestamp.now(),
+  expiresAt: Timestamp.fromDate(expires),
+  likes: 0,
+  dislikes: 0,
+  userVotes: {}
+});
 
     onAdd && onAdd();
     alert("Classroom added!");
@@ -67,10 +77,27 @@ export default function AddClassroom({ onAdd }) {
 };
 
   return (
-    <div>
-      <h3>Add Classroom</h3>
+  <div>
+    {/* 🧾 TITLE */}
+    <h2 style={{ marginBottom: "20px", textAlign: "center" }}>
+      Add Classroom
+    </h2>
 
-      <select onChange={(e) => setBlock(e.target.value)}>
+    {/* 🏫 BLOCK + ROOM */}
+    <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      
+      <select
+        value={block}
+        onChange={(e) => setBlock(e.target.value)}
+        style={{
+          flex: 1,
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          background: darkMode ? "#444" : "white",
+          color: darkMode ? "white" : "black"
+        }}
+      >
         <option>AB1</option>
         <option>AB2</option>
         <option>CB</option>
@@ -80,9 +107,34 @@ export default function AddClassroom({ onAdd }) {
         placeholder="Room number"
         value={room}
         onChange={(e) => setRoom(e.target.value)}
+        style={{
+          flex: 2,
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          background: darkMode ? "#444" : "white",
+          color: darkMode ? "white" : "black"
+        }}
       />
-
-      <button onClick={addClassroom}>Add +</button>
     </div>
-  );
+
+    {/* ➕ ADD BUTTON */}
+    <button
+      onClick={addClassroom}
+      style={{
+        width: "100%",
+        padding: "12px",
+        borderRadius: "8px",
+        border: "none",
+        background: "#007bff",
+        color: "white",
+        fontSize: "16px",
+        fontWeight: "bold",
+        cursor: "pointer"
+      }}
+    >
+      + Add Classroom
+    </button>
+  </div>
+);
 }
